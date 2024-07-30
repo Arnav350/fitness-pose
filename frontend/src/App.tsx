@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 
 function App() {
-  const [stage, setStage] = useState(null);
-  const [reps, setReps] = useState(0);
+  const [leftStage, setLeftStage] = useState(null);
+  const [rightStage, setRightStage] = useState(null);
+  const [leftReps, setLeftReps] = useState(0);
+  const [rightReps, setRightReps] = useState(0);
 
-  const startScript = async (side: string) => {
+  const startScript = async () => {
     try {
       const response = await fetch("http://localhost:5000/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ side }),
       });
       if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -44,8 +45,10 @@ function App() {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        setStage(data.stage);
-        setReps(data.reps);
+        setLeftStage(data.left_stage);
+        setRightStage(data.right_stage);
+        setLeftReps(data.left_reps);
+        setRightReps(data.right_reps);
       } catch (error) {
         console.error("There was a problem with the fetch operation:", error);
       }
@@ -57,12 +60,17 @@ function App() {
   return (
     <div>
       <h1>Pose Detection</h1>
-      <button onClick={() => startScript("left")}>Start Left</button>
-      <button onClick={() => startScript("right")}>Start Right</button>
+      <button onClick={startScript}>Start</button>
       <button onClick={stopScript}>Stop</button>
       <div>
-        <p>Stage: {stage}</p>
-        <p>Reps: {reps}</p>
+        <h2>Left Arm</h2>
+        <p>Stage: {leftStage}</p>
+        <p>Reps: {leftReps}</p>
+      </div>
+      <div>
+        <h2>Right Arm</h2>
+        <p>Stage: {rightStage}</p>
+        <p>Reps: {rightReps}</p>
       </div>
     </div>
   );
