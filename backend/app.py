@@ -27,9 +27,10 @@ def calculate_angle(a, b, c):
 counter = 0
 stage = None
 running = False
+side = "left"
 
 def pose_detection():
-    global counter, stage, running
+    global counter, stage, running, side
     running = True
     cap = cv2.VideoCapture(0)
 
@@ -54,12 +55,20 @@ def pose_detection():
             try:
                 landmarks = results.pose_landmarks.landmark
 
-                shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
-                            landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-                elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,
-                         landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
-                wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,
-                         landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+                if side == "left":
+                    shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
+                                landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+                    elbow = [landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,
+                             landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y]
+                    wrist = [landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,
+                             landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
+                else:
+                    shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
+                                landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
+                    elbow = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x,
+                             landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
+                    wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x,
+                             landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
 
                 angle = calculate_angle(shoulder, elbow, wrist)
 
@@ -89,11 +98,18 @@ def pose_detection():
 
 @app.route('/start', methods=['POST'])
 def start_pose_detection():
-    global counter, stage
+    global counter, stage, side
     counter = 0
     stage = None
+    side = request.json.get('side', 'left')
     threading.Thread(target=pose_detection).start()
-    return jsonify({'message': 'Pose detection started'})
+    return jsonify({'message': 'Pose detection started', 'side': side})
+
+@app.route('/stop', methods=['POST'])
+def stop_pose_detection():
+    global running
+    running = False
+    return jsonify({'message': 'Pose detection stopped'})
 
 @app.route('/status', methods=['GET'])
 def get_status():
